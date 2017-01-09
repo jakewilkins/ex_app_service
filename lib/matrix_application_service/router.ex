@@ -7,7 +7,7 @@ defmodule MatrixApplicationService.Router do
   def call(conn, opts) do
     conn = fetch_query_params(conn)
     #                  Allows mounting to any endpoint without knowing what it is.
-    call(conn.method, [Enum.reverse(conn.path_info) | []], conn, opts)
+    call(conn.method, Enum.reverse(conn.path_info), conn, opts)
   end
 
   #def call("GET", ["_matrix", "app", "r0", "user"], conn, opts) do
@@ -16,7 +16,7 @@ defmodule MatrixApplicationService.Router do
   #end
 
   # return user information to HS on existence and info on this user
-  def call("GET", [user_id, "users", _], conn, opts) do
+  def call("GET", [user_id, "users" | _], conn, opts) do
     case MatrixApplicationService.authorize_homeserver(conn.query_params) do
       :valid -> apply_func(conn, Keyword.get(opts, :user_query), %{user_id: user_id})
       :session_not_supplied -> send_resp(conn, 401, "")
@@ -24,7 +24,7 @@ defmodule MatrixApplicationService.Router do
     end
   end
   # return room information to HS on existence of this room
-  def call("GET", [room_alias, "rooms", _], conn, opts) do
+  def call("GET", [room_alias, "rooms" | _], conn, opts) do
     case MatrixApplicationService.authorize_homeserver(conn.query_params) do
       :valid -> apply_func(conn, Keyword.get(opts, :room_query), %{room_alias: room_alias})
       :session_not_supplied -> send_resp(conn, 401, "")
@@ -32,7 +32,7 @@ defmodule MatrixApplicationService.Router do
     end
   end
   # Receive events from HS
-  def call("PUT", [transaction_id, "transactions", _], conn, opts) do
+  def call("PUT", [transaction_id, "transactions" | _], conn, opts) do
     {body, conn} = conn |> get_body
     case MatrixApplicationService.authorize_homeserver(conn.query_params) do
       :valid -> apply_func(conn, Keyword.get(opts, :transactions), %{transaction_id: transaction_id, body: body})
